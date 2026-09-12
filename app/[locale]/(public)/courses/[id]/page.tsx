@@ -1,3 +1,5 @@
+import catalogCourses from "@/components/public/upsurge-catalog-data.json";
+import { UpsurgeCourseDetails } from "@/components/public/upsurge-course-details";
 import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -40,6 +42,9 @@ export const dynamic = 'force-dynamic';
 export async function generateMetadata(props: { params: Promise<{ id: string; locale: string }> }): Promise<Metadata> {
     const { id, locale } = await props.params;
     const [supabase, tenantId] = await Promise.all([createClient(), getCurrentTenantId()]);
+    const catalogCourse = tenantId === "00000000-0000-0000-0000-000000000001" ? catalogCourses.find(course => course.slug === id) : undefined;
+    if (catalogCourse) return { title: { absolute: `${catalogCourse.title} | Upsurge.club` } };
+    if (!/^\d+$/.test(id)) return {};
     const { data: course } = await supabase
         .from("courses")
         .select("title, description, thumbnail_url")
@@ -84,7 +89,7 @@ interface Lesson {
     is_preview: boolean;
 }
 
-export default async function CourseDetailsPage(props: {
+async function DatabaseCourseDetailsPage(props: {
     params: Promise<{ id: string; locale: string }>;
     searchParams: Promise<{ enroll?: string }>;
 }) {
@@ -598,4 +603,18 @@ export default async function CourseDetailsPage(props: {
             </div>
         </div>
     );
+}
+
+export default async function CourseDetailsPage(props: {
+    params: Promise<{ id: string; locale: string }>;
+    searchParams: Promise<{ enroll?: string }>;
+}) {
+    const { id, locale } = await props.params;
+    if (!/^\d+$/.test(id)) {
+        const tenantId = await getCurrentTenantId();
+        const course = tenantId === "00000000-0000-0000-0000-000000000001" ? catalogCourses.find(item => item.slug === id) : undefined;
+        if (!course) notFound();
+        return <UpsurgeCourseDetails course={course} locale={locale} />;
+    }
+    return <DatabaseCourseDetailsPage {...props} />;
 }

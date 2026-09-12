@@ -4,6 +4,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { UpsurgeLoginContent } from "./upsurge-login-dialog";
 import { UpsurgeSearchDialog } from "./upsurge-search-dialog";
+import catalogCourses from "./upsurge-catalog-data.json";
 import Image from "next/image";
 import localFont from "next/font/local";
 import { cn } from "@/lib/utils";
@@ -81,7 +82,7 @@ export function UpsurgeShell({ children, navbar, footer, enabled }: { children: 
   const home = `/${locale}`;
   const catalog = `${home}/courses`;
   const isHomepage = pathname === "/" || pathname === home || pathname === `${home}/`;
-  const isCatalog = pathname === catalog || pathname === `${catalog}/`;
+  const isCatalog = pathname === catalog || pathname === `${catalog}/` || catalogCourses.some(course => pathname === `${catalog}/${course.slug}` || pathname === `${catalog}/${course.slug}/`);
   const isLearning = pathname === home + "/my-learning" || pathname === home + "/my-learning/";
   const isProfile = pathname === home + "/user/profile/edit" || pathname === home + "/user/profile/edit/";
   if (!enabled || (!isHomepage && !isCatalog && !isLearning && !isProfile)) {

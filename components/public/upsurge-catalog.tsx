@@ -78,7 +78,7 @@ export function UpsurgeCatalog() {
           <div className={styles.grid}>
             {courses.map((course, index) => (
               <article className={styles.card} key={course.slug}>
-                <a href={`https://www.upsurge.club/course/${course.slug}`} className={styles.courseLink}>
+                <Link href={`/${locale}/courses/${course.slug}`} className={styles.courseLink}>
                   <div className={styles.thumbnail}>
                     <Image src={course.image} alt={course.title} width={1048} height={590} sizes="(max-width: 640px) 94vw, (max-width: 1050px) 46vw, 29vw" loading={index < 3 ? "eager" : "lazy"} />
                     {course.bestseller && <span className={styles.bestseller}>Bestseller</span>}
@@ -86,7 +86,7 @@ export function UpsurgeCatalog() {
                   <div className={styles.titleRow}><h3>{course.title}</h3><span className={styles.rating} aria-label={`${course.rating} out of 5 stars`}><Star aria-hidden="true" />{course.rating.toFixed(1)}</span></div>
                   <p className={styles.byline}>{count.format(course.learners)} learners · by {course.instructor}</p>
                   <p className={styles.price}><strong>{money.format(course.price)}</strong><del>{money.format(course.originalPrice)}</del><span>SAVE {Math.round((1 - course.price / course.originalPrice) * 100)}%</span></p>
-                </a>
+                </Link>
               </article>
             ))}
           </div>

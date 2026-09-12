@@ -48,7 +48,7 @@ export function UpsurgeSearchDialog({ catalog, fontClassName }: { catalog: strin
         </>}
         <section><h2>{term.length >= 3 ? "Search results" : "Trending courses"}</h2>
           <p className="sr-only" role="status">{term.length >= 3 ? `${results.length} matching courses` : "Trending courses"}</p>
-          {results.length ? <div className={styles.courses}>{results.map(course => <a key={course.slug} href={`https://www.upsurge.club/course/${course.slug}`} className={styles.course}><h3>{course.title}</h3><p>{course.instructor}</p><Image src={course.image} alt="" width={320} height={180} sizes="(max-width: 600px) 40vw, 210px" /></a>)}</div> : <div className={styles.empty}><p>No courses found for “{term}”.</p><button type="button" onClick={() => setQuery("")}>Explore trending courses</button></div>}
+          {results.length ? <div className={styles.courses}>{results.map(course => <Link key={course.slug} href={`${catalog}/${course.slug}`} onClick={() => setOpen(false)} className={styles.course}><h3>{course.title}</h3><p>{course.instructor}</p><Image src={course.image} alt="" width={320} height={180} sizes="(max-width: 600px) 40vw, 210px" /></Link>)}</div> : <div className={styles.empty}><p>No courses found for “{term}”.</p><button type="button" onClick={() => setQuery("")}>Explore trending courses</button></div>}
         </section>
       </Primitive.Popup>
     </DialogPortal>
