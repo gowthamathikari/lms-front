@@ -9,11 +9,18 @@ import type { Metadata } from 'next';
 import { buildPageMetadata, getSeoContext } from '@/lib/seo';
 import { pickCourseProduct, type LinkedProduct } from '@/lib/course-pricing';
 import { JsonLd, itemListJsonLd } from '@/lib/structured-data';
+import { UpsurgeCatalog } from '@/components/public/upsurge-catalog';
 
 export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
     const { locale } = await params;
+    if ((await getCurrentTenantId()) === '00000000-0000-0000-0000-000000000001') {
+        return {
+            title: { absolute: 'Stock Market Courses | Upsurge.club' },
+            description: 'Explore stock market courses on trading, investing, options, and technical analysis.',
+        };
+    }
     const t = await getTranslations({ locale, namespace: 'seo' });
     return buildPageMetadata({ title: t('courses.title'), description: t('courses.description'), path: '/courses', locale });
 }
@@ -27,10 +34,13 @@ export default async function CoursesPage({
 }) {
     const { locale } = await params;
     const { search, category } = await searchParams;
+    const tenantId = await getCurrentTenantId();
+    if (tenantId === '00000000-0000-0000-0000-000000000001') {
+        return <UpsurgeCatalog />;
+    }
     const t = await getTranslations('coursesCatalog');
     const tSearch = await getTranslations('courseSearch');
     const supabase = await createClient();
-    const tenantId = await getCurrentTenantId();
 
     // Sanitize search input — strip special characters used in ilike patterns
     const sanitizedSearch = search?.replace(/[%_\\]/g, '') || '';
@@ -127,8 +137,8 @@ export default async function CoursesPage({
 
     // Enrich courses with product info
     const enrichedCourses = courses?.map(course => {
-        const cat = course.category as any;
-        const auth = course.author as any;
+        const cat = course.category;
+        const auth = course.author;
         return {
             course_id: course.course_id,
             title: course.title,

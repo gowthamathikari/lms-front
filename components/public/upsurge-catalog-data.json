@@ -1,0 +1,120 @@
+[
+  {
+    "slug": "trilok-intraday-trading-strategy",
+    "title": "Trilok Intraday Trading Strategy",
+    "instructor": "Amarlal Bhatia",
+    "image": "/upsurge/catalog-trilok.webp",
+    "sourceImage": "https://images-cdn.upsurge.club/courses/dLs1k_83pErj2y4Yu3u-O.png",
+    "rating": 4.8,
+    "learners": 2192,
+    "price": 699,
+    "originalPrice": 1748,
+    "categories": [
+      "Intraday Trading"
+    ],
+    "pro": false,
+    "level": "beginner",
+    "language": "Hindi",
+    "bestseller": true
+  },
+  {
+    "slug": "option-buying-strategy-using-ai-renko-indicator",
+    "title": "Option Buying Strategy using AI Renko Indicator",
+    "instructor": "Dr. Devendra Pratap Singh",
+    "image": "/upsurge/catalog-renko.webp",
+    "sourceImage": "https://images-cdn.upsurge.club/courses/dzEOlf9XZAE9VY3BX-qOP.jpg",
+    "rating": 4.8,
+    "learners": 3469,
+    "price": 1499,
+    "originalPrice": 3748,
+    "categories": [
+      "Option Trading"
+    ],
+    "pro": false,
+    "level": "intermediate",
+    "language": "Hindi",
+    "bestseller": true
+  },
+  {
+    "slug": "passive-income-through-options-selling",
+    "title": "Passive Income through Options Selling",
+    "instructor": "Sanjay Kathuria, CFA",
+    "image": "/upsurge/catalog-passive.webp",
+    "sourceImage": "https://images-cdn.upsurge.club/courses/QADLZogCbYtosRPUv0xln.jpg",
+    "rating": 4.9,
+    "learners": 66524,
+    "price": 399,
+    "originalPrice": 999,
+    "categories": [
+      "Option Trading",
+      "Trading Strategies",
+      "Stock Market in Hindi",
+      "Options Selling"
+    ],
+    "pro": false,
+    "level": "intermediate",
+    "language": "Hindi",
+    "bestseller": true
+  },
+  {
+    "slug": "options-trading-in-hindi-for-beginners",
+    "title": "Options Trading for Beginners",
+    "instructor": "Jyoti Budhia",
+    "image": "/upsurge/catalog-beginner.webp",
+    "sourceImage": "https://images-cdn.upsurge.club/courses/rDCGeclIMpDHXOSm7u5lk.jpg",
+    "rating": 4.8,
+    "learners": 20101,
+    "price": 399,
+    "originalPrice": 999,
+    "categories": [
+      "Option Trading",
+      "Stock Market Basics",
+      "Stock Market in Hindi"
+    ],
+    "pro": true,
+    "level": "beginner",
+    "language": "Hindi",
+    "bestseller": false
+  },
+  {
+    "slug": "learn-technical-analysis-in-hindi",
+    "title": "Learn Technical Analysis by Jyoti Budhia",
+    "instructor": "Jyoti Budhia",
+    "image": "/upsurge/catalog-technical.webp",
+    "sourceImage": "https://images-cdn.upsurge.club/courses/akJ4yAJR2Eq7EzVbfUjUx.png",
+    "rating": 4.7,
+    "learners": 11648,
+    "price": 399,
+    "originalPrice": 999,
+    "categories": [
+      "Technical Analysis",
+      "Stock Market Basics",
+      "Stock Market in Hindi"
+    ],
+    "pro": true,
+    "level": "beginner",
+    "language": "Hindi",
+    "bestseller": false
+  },
+  {
+    "slug": "momentum-swing-trading",
+    "title": "Momentum Swing Trading Strategy",
+    "instructor": "Himanshu Arora",
+    "image": "/upsurge/catalog-investing.webp",
+    "sourceImage": "https://images-cdn.upsurge.club/courses/FOEb_V1c7dtA0AoFCgdhX.png",
+    "rating": 4.9,
+    "learners": 8995,
+    "price": 399,
+    "originalPrice": 999,
+    "categories": [
+      "Technical Analysis",
+      "Trading Strategies",
+      "Stock Market in Hindi",
+      "Swing Trading"
+    ],
+    "pro": false,
+    "level": "intermediate",
+    "language": "Hindi",
+    "bestseller": false
+  }
+]

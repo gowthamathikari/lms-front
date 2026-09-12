@@ -1,0 +1,32 @@
+.page { display: grid; grid-template-columns: minmax(240px, 33.333%) minmax(0, 1fr); min-height: 850px; background: #fafafe; color: #30343b; }
+.sidebar { background: #fff; padding: 80px 0 80px max(24px, calc((100vw - 1640px) / 2)); display: flex; flex-direction: column; align-items: stretch; }
+.sidebar a { padding: 22px 30px; font-size: 20px; line-height: 26px; text-decoration: none; color: #4b5058; }
+.sidebar a[aria-current] { color: #4543df; background: #ededfb; font-weight: 700; border-radius: 10px 0 0 10px; }
+.sidebar a:hover { background: #f2f2fc; }
+.content { padding: 80px clamp(24px, 4.2vw, 80px); min-width: 0; }
+.form { display: flex; flex-direction: column; gap: 32px; }
+.imageRow { display: flex; align-items: center; gap: 20px; margin-bottom: 42px; }
+.avatar { width: 140px; height: 140px; font-size: 24px; background: #e9ecf9; color: #7779c9; }
+.avatar [data-slot=avatar-fallback] { background: #e9ecf9; color: #7779c9; }
+.imageButton { position: relative; display: flex; align-items: center; gap: 10px; padding: 11px 16px; border: 1px solid #ddd; border-radius: 26px; font-size: 18px; cursor: pointer; overflow: hidden; }
+.fileInput { position: absolute; inset: 0; opacity: 0; width: 100%; cursor: pointer; }
+.fields { gap: 32px; }
+.form [data-slot=field-label], .form legend { font: inherit; font-size: 18px; display: flex; justify-content: space-between; width: 100%; }
+.input, .inputRow { width: 100%; min-height: 65px; background: #fff; border: 1px solid #c3c9eb; border-radius: 10px; font: inherit; font-size: 20px; padding: 16px 20px; }
+.inputRow { display: flex; align-items: center; gap: 12px; }
+.inputRow input { min-width: 0; width: 100%; border: 0; background: transparent; outline: none; font: inherit; }
+.inputRow input::placeholder { color: #8b9cb7; }
+.inputRow input[readonly] { color: #737780; }
+.inputRow button { white-space: nowrap; color: #4543df; font-size: 17px; background: transparent; border: 0; cursor: pointer; }
+.verified { color: #008c64; font-size: 17px; }
+.gender { margin-top: 60px; }
+.radios { display: flex; flex-wrap: wrap; gap: 24px; }
+.radios label { display: flex; align-items: center; gap: 10px; font-size: 20px; color: #68707c; cursor: pointer; }
+.radios input { accent-color: #4543df; width: 16px; height: 16px; }
+.save { width: 100%; padding: 17px 24px; background: #4543df; color: #fff; font: inherit; font-weight: 600; font-size: 19px; border: 0; border-radius: 10px; cursor: pointer; }
+.save:hover { background: #3634ca; }
+.form button:disabled { opacity: .6; cursor: wait; }
+.error { color: #b42318; margin: 0; }
+.message { color: #087443; margin: 0; }
+.page :focus-visible, .imageButton:focus-within, .inputRow:focus-within { outline: 2px solid #4543df; outline-offset: 3px; }
+@media (max-width: 700px) { .page { grid-template-columns: 1fr; min-height: auto; } .sidebar { flex-direction: row; overflow-x: auto; padding: 16px; gap: 4px; } .sidebar a { white-space: nowrap; font-size: 15px; padding: 12px 16px; } .sidebar a[aria-current] { border-radius: 8px; } .content { padding: 32px 20px 48px; } .avatar { width: 100px; height: 100px; } .input, .inputRow { font-size: 16px; min-height: 56px; padding: 14px; } .gender { margin-top: 16px; } .radios { gap: 16px; } .radios label { font-size: 16px; } .imageRow { margin-bottom: 32px; } }

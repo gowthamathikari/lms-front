@@ -1,3 +1,4 @@
+import { getAuthCookieDomain } from "@/lib/supabase/cookie-domain"
 import createIntlMiddleware from 'next-intl/middleware'
 import { type NextRequest, NextResponse } from 'next/server'
 import { updateSession } from '@/lib/supabase/proxy'
@@ -328,6 +329,9 @@ export default async function proxy(request: NextRequest) {
     '/pricing',
     '/verify',
     '/courses',
+    // This page verifies the user server-side and reads enrollments through RLS.
+    // Visitors without school membership must be able to see its empty state.
+    '/my-learning',
     // OAuth 2.1 consent screen (Supabase redirects here with ?authorization_id=…).
     // Must be public: the page handles its own login redirect and preserves the
     // authorization_id — the middleware's redirectTo drops query strings.
@@ -405,11 +409,7 @@ export default async function proxy(request: NextRequest) {
       cookies: {
         getAll() { return request.cookies.getAll() },
         setAll(cookiesToSet) {
-          const cookieDomain = (() => {
-            const d = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN?.split(':')[0]
-            if (!d || d === 'localhost' || d === '127.0.0.1') return undefined
-            return `.${d}`
-          })()
+          const cookieDomain = getAuthCookieDomain(request.nextUrl.hostname, process.env.NEXT_PUBLIC_PLATFORM_DOMAIN)
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, {

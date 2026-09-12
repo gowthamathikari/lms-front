@@ -33,10 +33,12 @@ import { ANALYTICS_EVENTS } from '@/lib/analytics/events'
 import { toAuthFailureCode } from '@/lib/analytics/auth-failure-codes'
 
 interface SignUpFormProps extends React.ComponentPropsWithoutRef<'div'> {
+  onSwitchAuth?: () => void
+  redirectAfterAuth?: string
   tenantId?: string
 }
 
-export function SignUpForm({ className, tenantId, ...props }: SignUpFormProps) {
+export function SignUpForm({ className, tenantId, redirectAfterAuth, onSwitchAuth, ...props }: SignUpFormProps) {
   const t = useTranslations('auth.signup')
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
@@ -47,7 +49,7 @@ export function SignUpForm({ className, tenantId, ...props }: SignUpFormProps) {
   const [showPassword, setShowPassword] = useState(false)
   const router = useRouter()
   const searchParams = useSearchParams()
-  const nextPath = getSafeNextPath(searchParams.get('next'), '')
+  const nextPath = getSafeNextPath(redirectAfterAuth ?? searchParams.get('next'), '')
   const analytics = useAnalytics()
   // `signup_started` means "began filling the form", not "loaded the page" —
   // the page load is already a screen view, and a second event for it would
@@ -284,6 +286,7 @@ export function SignUpForm({ className, tenantId, ...props }: SignUpFormProps) {
               {t('haveAccount')}{' '}
               <Link
                 href={nextPath ? `/auth/login?next=${encodeURIComponent(nextPath)}` : '/auth/login'}
+                onClick={onSwitchAuth ? (event) => { event.preventDefault(); onSwitchAuth(); } : undefined}
                 className="underline underline-offset-4"
               >
                 {t('login')}
