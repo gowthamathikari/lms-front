@@ -143,6 +143,7 @@
     "eslint-config-next": "16.2.12",
     "husky": "^9.1.7",
     "lint-staged": "^17.3.0",
+    "supabase": "^2.117.0",
     "tailwindcss": "^4",
     "tsx": "^4.23.5",
     "typescript": "^5",
