@@ -1,0 +1,237 @@
+import type { Metadata, Viewport } from "next";
+import { Geist_Mono, Noto_Sans } from "next/font/google";
+import "../globals.css";
+import { Toaster } from "@/components/ui/sonner";
+import { RouteProgress } from "@/components/shared/route-progress";
+import { AnalyticsUserBinder } from "@/components/analytics-user-binder";
+import { FeedbackButton } from "@/components/shared/feedback-button";
+import { ThemeProvider } from "@/components/theme-provider";
+import { TenantProvider } from "@/components/tenant/tenant-provider"
+import { TenantCssVars } from "@/components/tenant/tenant-css-vars";
+import { TenantCssVarsServer } from "@/components/tenant/tenant-css-vars-server";
+import { getCurrentTenant, getCurrentUserId } from "@/lib/supabase/tenant";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { unstable_cache } from "next/cache";
+import { NextIntlClientProvider } from 'next-intl';
+import { getMessages, getTranslations, setRequestLocale } from 'next-intl/server';
+import { notFound } from 'next/navigation';
+import { locales } from '@/i18n';
+import type { StoredPreset } from '@/lib/themes/presets';
+import { getSeoContext, ogImageUrl } from '@/lib/seo';
+import { OpenPanelComponent } from '@openpanel/nextjs';
+import { isAnalyticsEnvironmentEnabled } from '@/lib/analytics/exclusions';
+import { getSessionReplayConfig } from '@/lib/analytics/replay';
+import { hasPlanFeature } from '@/lib/plans/server';
+
+const notoSans = Noto_Sans({ variable: '--font-sans', subsets: ["latin"] });
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'seo' });
+  const { baseUrl, siteName } = await getSeoContext();
+  const description = t('defaultDescription');
+
+  return {
+    metadataBase: new URL(baseUrl),
+    title: {
+      default: siteName,
+      template: `%s | ${siteName}`,
+    },
+    description,
+    openGraph: {
+      siteName,
+      type: 'website',
+      locale: locale === 'es' ? 'es_ES' : 'en_US',
+      title: siteName,
+      description,
+      images: [
+        {
+          url: ogImageUrl({ title: siteName, subtitle: description, site: siteName }),
+          width: 1200,
+          height: 630,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: siteName,
+      description,
+    },
+  };
+}
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  // Keyboard shrinks the layout viewport so dvh-sized chat surfaces and
+  // docked composers stay visible (Chrome Android; iOS handled via
+  // visualViewport in lesson-ai-chat).
+  interactiveWidget: "resizes-content",
+  // Enables env(safe-area-inset-*) on notched devices.
+  viewportFit: "cover",
+};
+
+export function generateStaticParams() {
+  return locales.map((locale) => ({ locale }));
+}
+
+// Branding settings are near-static; cache per tenant for 60s so every
+// navigation doesn't re-query tenant_settings before <html> can render.
+// Admin settings updates use revalidatePath, which doesn't consistently
+// cover this root layout across all touched call sites — a short TTL is a
+// safer invalidation strategy than relying on tags being threaded through
+// every settings-write path.
+const getTenantSettings = unstable_cache(
+  async (tenantId: string) => {
+    const sb = createAdminClient();
+    const { data: settings } = await sb
+      .from('tenant_settings')
+      .select('setting_key, setting_value')
+      .eq('tenant_id', tenantId)
+      .in('setting_key', ['site_name', 'logo_url', 'primary_color', 'secondary_color', 'favicon_url', 'theme_preset']);
+    return settings ?? [];
+  },
+  ['tenant-settings-branding'],
+  { revalidate: 60 }
+);
+
+export default async function RootLayout({
+  children,
+  params
+}: Readonly<{
+  children: React.ReactNode;
+  params: Promise<{ locale: string }>;
+}>) {
+  const { locale } = await params;
+
+  // Validate that the incoming `locale` parameter is valid
+  if (!locales.includes(locale as (typeof locales)[number])) {
+    notFound();
+  }
+
+  // Enable static rendering
+  setRequestLocale(locale);
+
+  const messages = await getMessages();
+  const tenant = await getCurrentTenant();
+
+  // Load tenant settings for branding overrides (use admin client to bypass RLS
+  // since these are public tenant configuration, not user-specific data)
+  // setting_value is jsonb: `{ value: string }` for branding keys, a StoredPreset for theme_preset
+  let tenantSettings: Record<string, { value?: string } | undefined> = {};
+  if (tenant) {
+    const settings = await getTenantSettings(tenant.id);
+    tenantSettings = settings.reduce((acc: typeof tenantSettings, s) => {
+      acc[s.setting_key] = s.setting_value;
+      return acc;
+    }, {});
+  }
+
+  // Custom branding is a Business+ feature (#662). Below that the school's
+  // logo and name still apply — a school must stay recognisable — but its
+  // colours, theme preset, radius and font are ignored in favour of the
+  // platform palette. Both the server <style> and the client re-applier read
+  // from this object, so nulling the fields here gates both.
+  const customBranding = tenant ? await hasPlanFeature(tenant.id, 'custom_branding') : false;
+
+  const tenantInfo = tenant ? {
+    id: tenant.id,
+    slug: tenant.slug,
+    name: tenantSettings.site_name?.value || tenant.name,
+    logo_url: tenantSettings.logo_url?.value || tenant.logo_url,
+    // Empty string = "no override": TenantCssVarsServer only writes the brand
+    // vars when the value is truthy, so the platform palette applies.
+    primary_color: customBranding
+      ? tenantSettings.primary_color?.value || tenant.primary_color
+      : '',
+    secondary_color: customBranding
+      ? tenantSettings.secondary_color?.value || tenant.secondary_color
+      : '',
+    plan: tenant.plan,
+    settings: tenantSettings,
+    theme_preset: customBranding
+      ? ((tenantSettings.theme_preset as unknown as StoredPreset | undefined) ?? null)
+      : null,
+  } : null;
+
+  // Product analytics. Renders nothing at all — no script tag, no network —
+  // unless a client id is configured AND the environment is one we track
+  // (production, or an explicit non-production opt-in). Tenant and locale are
+  // already resolved above; this adds no data fetching.
+  const analyticsClientId = isAnalyticsEnvironmentEnabled()
+    ? process.env.NEXT_PUBLIC_OPENPANEL_CLIENT_ID
+    : undefined;
+  // `x-user-id` is set by proxy.ts — a header read, no auth round trip. Passing
+  // it as `profileId` puts the identify call in the init snippet, so even the
+  // first screen_view of a hard load lands on the user instead of a device id.
+  // <AnalyticsUserBinder> then adds name/email and follows sign-in/sign-out.
+  const analyticsProfileId = analyticsClientId
+    ? (await getCurrentUserId()) ?? undefined
+    : undefined;
+
+  return (
+    <html lang={locale} className={notoSans.variable} suppressHydrationWarning>
+      <head>
+        <TenantCssVarsServer
+          themePreset={tenantInfo?.theme_preset}
+          primaryColor={tenantInfo?.primary_color}
+          secondaryColor={tenantInfo?.secondary_color}
+        />
+      </head>
+      <body
+        className={`${geistMono.variable} antialiased`}
+      >
+        <NextIntlClientProvider messages={messages}>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <TenantProvider tenant={tenantInfo}>
+              <TenantCssVars />
+              {analyticsClientId ? (
+                <OpenPanelComponent
+                  clientId={analyticsClientId}
+                  // Both point at our own origin (app/api/op/[...path]) so the
+                  // tracker is first-party and adblockers leave it alone. The
+                  // matching `api/op/` exclusion lives in proxy.ts — without it
+                  // every beacon 307s to /join-school.
+                  apiUrl="/api/op"
+                  scriptUrl="/api/op/op1.js"
+                  profileId={analyticsProfileId}
+                  trackScreenViews
+                  trackOutgoingLinks
+                  // Session replay: the recorder is fetched through the same
+                  // first-party route (`/api/op/op1-replay.js`) and its chunks
+                  // ride `/api/op/track` as `type: "replay"`. Sample rate and
+                  // masking live in lib/analytics/replay.ts.
+                  sessionReplay={getSessionReplayConfig()}
+                  globalProperties={{
+                    tenant_id: tenantInfo?.id ?? null,
+                    tenant_slug: tenantInfo?.slug ?? null,
+                    locale,
+                  }}
+                />
+              ) : null}
+              <RouteProgress />
+              <AnalyticsUserBinder />
+              {children}
+              <FeedbackButton />
+              <Toaster />
+            </TenantProvider>
+          </ThemeProvider>
+        </NextIntlClientProvider>
+      </body>
+    </html>
+  );
+}

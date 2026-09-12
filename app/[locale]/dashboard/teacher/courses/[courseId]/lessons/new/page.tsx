@@ -1,0 +1,88 @@
+import { createClient } from '@/lib/supabase/server'
+import { notFound } from 'next/navigation'
+import dynamic from 'next/dynamic'
+import { Skeleton } from '@/components/ui/skeleton'
+
+const LessonEditor = dynamic(
+  () => import('@/components/teacher/lesson-editor').then(m => m.LessonEditor),
+  {
+    loading: () => (
+      <div className="mx-auto max-w-4xl p-6 space-y-6">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-9 w-24" />
+        </div>
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-32 w-full" />
+        <Skeleton className="h-64 w-full" />
+      </div>
+    ),
+  }
+)
+import { getCurrentTenantId, getCurrentUserId } from '@/lib/supabase/tenant'
+import { getUserRole } from '@/lib/supabase/get-user-role'
+import { LessonEditorTour } from '@/components/tours/lesson-editor-tour'
+import { FirstLessonHint } from '@/components/teacher/lesson-editor/first-lesson-hint'
+import { getUiState } from '@/lib/supabase/ui-state'
+import { isTourCompleted, areToursEnabled } from '@/lib/ui-state-keys'
+
+interface PageProps {
+  params: Promise<{ courseId: string }>
+  searchParams: Promise<{ from?: string }>
+}
+
+export default async function NewLessonPage({ params, searchParams }: PageProps) {
+  const [{ courseId }, { from }] = await Promise.all([params, searchParams])
+  // Arrived straight from creating the course (#675): show the one-line hint.
+  const fromNewCourse = from === 'new-course'
+  const supabase = await createClient()
+  const tenantId = await getCurrentTenantId()
+
+  const userId = await getCurrentUserId()
+  if (!userId) return notFound()
+
+  // The author or a tenant admin may add lessons (#690); other staff 404
+  // exactly as before.
+  const [{ data: course }, role] = await Promise.all([
+    supabase
+      .from('courses')
+      .select('course_id, title, author_id')
+      .eq('course_id', parseInt(courseId))
+      .eq('tenant_id', tenantId)
+      .single(),
+    getUserRole(),
+  ])
+
+  if (!course) return notFound()
+  if (course.author_id !== userId && role !== 'admin') return notFound()
+
+  // Get the next sequence number
+  const [{ data: lessons }, uiState] = await Promise.all([
+    supabase
+      .from('lessons')
+      .select('sequence')
+      .eq('course_id', parseInt(courseId))
+      .eq('tenant_id', tenantId)
+      .order('sequence', { ascending: false })
+      .limit(1),
+    getUiState(userId),
+  ])
+
+  const nextSequence = (lessons?.[0]?.sequence || 0) + 1
+
+  return (
+    <div className="min-h-screen bg-background">
+      <LessonEditorTour
+        userId={userId}
+        completed={isTourCompleted(uiState, 'lesson-editor')}
+        toursEnabled={areToursEnabled(uiState)}
+      />
+      {fromNewCourse && <FirstLessonHint courseTitle={course.title} />}
+      <LessonEditor
+        courseId={parseInt(courseId)}
+        courseTitle={course.title}
+        initialSequence={nextSequence}
+      />
+    </div>
+  )
+}
